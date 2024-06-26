@@ -3,16 +3,32 @@ class HomeWork11
 {
     static void Main (string[] args)
     {
-        Server server = new Server();
-        var s = server.CreateListOfBoxes();
+        Server server = new Server();        
+
         Client client = new Client();
-        var c = client.SortBoxes(s);
 
-        var str = client.ShowInformationAboutBoxes(c);
-        
+        server.BoxesCreated += () => Console.WriteLine("Server create new list of boxes");
+        try
+        {
+            var c = client.SortBoxes(server.CreateListOfBoxes());
 
+            var str = client.ShowInformationAboutBoxes(c);
 
-        Console.WriteLine (str);
+            Console.WriteLine(str);
+        }
+
+        catch (ArgumentNullException ex) 
+        {
+            Console.WriteLine("Ошибка 1: ссылка на список равна null");
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            Console.WriteLine("Ошибка 2: список сундоков пуст");
+        }
+        finally
+        {
+            Console.WriteLine("ИГРА ОКОНЧЕНА!");
+        }        
 
         Console.ReadLine ();
     }

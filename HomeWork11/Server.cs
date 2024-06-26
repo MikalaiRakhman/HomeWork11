@@ -1,25 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HomeWork11
+﻿namespace HomeWork11
 {
     public class Server
     {
         private Random _random = new Random();
+        public Action? BoxesCreated;
 
         public List<Box> CreateListOfBoxes()
         {
-            List<Box> boxes = new List<Box>();
+            int x = _random.Next(10);
 
-            for (int i = 0; i < 4; i++) 
+            if (x >= 0 && x <= 2)
             {
-                boxes.Add(CreateRandomBox());
-            }
+                List<Box> boxes = new List<Box>();
 
-            return boxes;
+                BoxesCreated?.Invoke();
+
+                int y = _random.Next(2);
+
+                if (y == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    return boxes;
+                }
+            }
+            else
+            {
+                List<Box> boxes = new List<Box>();
+
+                for (int i = 0; i < 4; i++)
+                {
+                    boxes.Add(CreateRandomBox());
+                }
+
+                BoxesCreated?.Invoke();
+
+                return boxes;
+            }
         }
 
         private Box CreateRandomBox()
@@ -62,7 +81,9 @@ namespace HomeWork11
         private Collection CreateRandomCollection() 
         {
             Collection collection = new Collection();
+
             collection.Id = _random.Next(1, 11);
+
             return collection;
         }
     }

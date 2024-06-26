@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace HomeWork11
 {
     public class Client
-    {
+    {        
         public List<Box> SortBoxes(List<Box> boxesFromServer)
         {
-            var sortByCollectionCount = boxesFromServer.OrderByDescending(x => CountOfCreditsInTheBox(x)).ThenBy(x => CountOfCollectionsInTheBox(x)).ThenBy(x => x.Basket.Count);
+            var sortByCollectionCount = boxesFromServer.OrderByDescending(x => CountOfCreditsInTheBox(x)).ThenByDescending(x => CountOfCollectionsInTheBox(x)).ThenByDescending(x => x.Basket.Count);
 
             return sortByCollectionCount.ToList();
         }
 
         public string ShowInformationAboutBoxes(List<Box> sortedBoxes)
         {
-
             return $"*------------------------------------------------------------------\r\nСаммари:\r\n\r\n" +
                 $"Сундук 1: {CountOfCreditsInTheBox(sortedBoxes[0])} кредитов, {CountOfCollectionsInTheBox(sortedBoxes[0])} коллекшенов ({CollectionIdNumbers(sortedBoxes[0])}), {sortedBoxes[0].Basket.Count} корзин\r\n" +
                 $"Сундук 2: {CountOfCreditsInTheBox(sortedBoxes[1])} кредитов, {CountOfCollectionsInTheBox(sortedBoxes[1])} коллекшенов ({CollectionIdNumbers(sortedBoxes[1])}), {sortedBoxes[1].Basket.Count} корзины\r\n" +
