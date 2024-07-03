@@ -1,214 +1,137 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Text;
+﻿using System.Text;
+using HomeWork11.Exceptions;
+using HomeWork11.Exeptions;
+using HomeWork11.Rewards;
 
 namespace HomeWork11
 {
     public class Client
-    {        
-        public List<Box> SortBoxes(List<Box> boxesFromServer)
+    {
+        public void Recive(List<Chest> chestsFromServer)
         {
-            var sortByCollectionCount = boxesFromServer.OrderByDescending(x => CountOfCreditsInTheBox(x)).ThenByDescending(x => CountOfCollectionsInTheBox(x)).ThenByDescending(x => x.Basket.Count);
+            VerifyList(chestsFromServer);
 
-            return sortByCollectionCount.ToList();
+            var sorted = SortBoxes(chestsFromServer);
+
+            Console.WriteLine(ShowInformationAboutBoxes(sorted));
         }
 
-        public string ShowInformationAboutBoxes(List<Box> sortedBoxes)
+        private void VerifyList(List<Chest> list)
         {
-            return $"*------------------------------------------------------------------\r\nСаммари:\r\n\r\n" +
-                $"Сундук 1: {CountOfCreditsInTheBox(sortedBoxes[0])} кредитов, {CountOfCollectionsInTheBox(sortedBoxes[0])} коллекшенов ({CollectionIdNumbers(sortedBoxes[0])}), {sortedBoxes[0].Basket.Count} корзин\r\n" +
-                $"Сундук 2: {CountOfCreditsInTheBox(sortedBoxes[1])} кредитов, {CountOfCollectionsInTheBox(sortedBoxes[1])} коллекшенов ({CollectionIdNumbers(sortedBoxes[1])}), {sortedBoxes[1].Basket.Count} корзины\r\n" +
-                $"Сундук 3: {CountOfCreditsInTheBox(sortedBoxes[2])} кредитов, {CountOfCollectionsInTheBox(sortedBoxes[2])} коллекшенов ({CollectionIdNumbers(sortedBoxes[2])}), {sortedBoxes[2].Basket.Count} корзины\r\n" +
-                $"Сундук 3: {CountOfCreditsInTheBox(sortedBoxes[3])} кредитов, {CountOfCollectionsInTheBox(sortedBoxes[3])} коллекшенов ({CollectionIdNumbers(sortedBoxes[3])}), {sortedBoxes[3].Basket.Count} корзина\r\n\r\n" +
-                $"Всего:\r\n\t" +
-                $"сундуков - {sortedBoxes.Count}\r\n\t" +
-                $"корзин - {BasketCount(sortedBoxes)}\r\n\t" +
-                $"коллекшенов - {CollectionCount(sortedBoxes)}\r\n\t" +
-                $"кредитов - {CreditsCount(sortedBoxes)}\r\n\t\r\n" +
-                $"Собранные коллешкшены: {CollectedCollectionsToString(CollectedCollectionsId(sortedBoxes))}\r\n" +
-                $"Не собраные коллекшены: {NotCollectedCollectionIdToString(NotCollectedCollectionsId(CollectedCollectionsId(sortedBoxes)))}\r\n" +
-                $"*------------------------------------------------------------------- ";
-        }
-
-        private int CountOfCreditsInTheBox(Box box)
-        {
-            int count = 0;
-
-            count += box.Credits;
-
-            for (int i = 0; i < box.Basket.Count; i++)
+            if (list == null)
             {
-                count += box.Basket[i].Credits;
+                throw new NullListOfRewardsException();
             }
-
-            return count;
-        }
-
-        private int CountOfCollectionsInTheBox(Box box)
-        {
-            int count = 0;
-
-            count += box.Collection.Count;
-
-            for (int i = 0; i < box.Basket.Count; i++)
+            else if (list.Count == 0)
             {
-                count += box.Basket[i].Collections.Count;
+                throw new EmptyListOfRewardsException();
             }
-
-            return count;
         }
 
-        private int BasketCount(List<Box> boxes)
+        private List<Chest> SortBoxes(List<Chest> chestsFromServer)
         {
-            int basketSum = 0;
+            var sorted = chestsFromServer.
+                OrderByDescending(CountInTheChest<Credits>).
+                ThenByDescending(CountInTheChest<Collection>).
+                ThenByDescending(x => x.Rewards.OfType<Basket>().Count());
 
-            foreach (Box box in boxes)
-            {
-                basketSum += box.Basket.Count;
-            }
-
-            return basketSum;
+            return sorted.ToList();
         }
 
-        private int CollectionCount(List<Box> boxes)
-        {
-            int count = 0;
-
-            foreach (Box box in boxes)
-            {
-                count += box.Collection.Count;
-                for (int i = 0; i < box.Basket.Count; i++)
-                {
-                    count += box.Basket[i].Collections.Count;
-                }
-            }
-
-            return count;
-        }
-
-        private int CreditsCount(List<Box> boxes)
-        {
-            int count = 0;
-
-            foreach (Box box in boxes)
-            {
-                count += CountOfCreditsInTheBox(box);
-            }
-
-            return count;
-        }
-
-        public string CollectionIdNumbers(Box box)
+        private string ShowInformationAboutBoxes(List<Chest> sortedChests)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("id: ");
 
-            for (int i = 0; i < box.Basket.Count; i++)
+            sb.Append($"*------------------------------------------------------------------\r\nСаммари:\r\n\r\n");
+
+            for ( int i = 0; i < sortedChests.Count; i++ )
             {
-                for (int j = 0; j < box.Basket[i].Collections.Count; j++)
-                {
-                    sb.Append($"{box.Basket[i].Collections[j].Id},");
-                }
+                sb.Append($"Сундук {i + 1}: {CountInTheChest<Credits>(sortedChests[i])} кредитов, {CountInTheChest<Collection>(sortedChests[i])} коллекшенов ({CollectionIdNumbers(sortedChests[i])}), {sortedChests[i].Rewards.OfType<Basket>().Count()} корзин\r\n");
             }
 
-            for (int i = 0; i < box.Collection.Count; i++)
-            {
-                if (i != box.Collection.Count - 1)
-                {
-                    sb.Append($"{box.Collection[i].Id},");
-                }
-                else
-                {
-                    sb.Append($"{box.Collection[i].Id}");
-                }
-            }
+            sb.Append($"Всего:\r\n\t");
+            sb.Append($"сундуков - {sortedChests.Count}\r\n\t");
+            sb.Append($"корзин - {BasketCount(sortedChests)}\r\n\t");
+            sb.Append($"коллекшенов - {CollectionCount(sortedChests)}\r\n\t");
+            sb.Append($"кредитов - {CreditsCount(sortedChests)}\r\n\t\r\n");
+            sb.Append($"Собранные коллешкшены: {CollectionIdToString(CollectedCollectionsId(sortedChests))}\r\n");
+            sb.Append($"Не собраные коллекшены: {CollectionIdToString(NotCollectedCollectionsId(CollectedCollectionsId(sortedChests)))}\r\n");
+            sb.Append($"*------------------------------------------------------------------- ");
 
             return sb.ToString();
+        }
+
+        private int CountInTheChest<T>(Chest chest)
+        {
+            int count = chest.Rewards.OfType<T>().Count();
+            var basketsInTheBox = chest.Rewards.OfType<Basket>().ToList();
+            count += basketsInTheBox.SelectMany(x => x.Rewards).ToList().OfType<T>().ToList().Count;
+
+            return count;
+        } 
+
+        private int BasketCount(List<Chest> chests)
+        {
+            return chests.SelectMany(x => x.Rewards).ToList().OfType<Basket>().ToList().Count;
+        }
+
+        private int CollectionCount(List<Chest> boxes)
+        {
+            return boxes.Select(x => CountInTheChest<Collection>(x)).Sum(); 
+        }
+
+        private int CreditsCount(List<Chest> boxes)
+        {
+            return boxes.Select(x => CountInTheChest<Credits>(x)).Sum();
+        }
+
+        private string CollectionIdNumbers(Chest box)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            var collectionsFromBox = box.Rewards.OfType<Collection>().ToList();
+
+            var baskets = box.Rewards.OfType<Basket>().ToList();
+
+            var collectionsFromBaskets = baskets.SelectMany(x => x.Rewards.OfType<Collection>()).ToList();
+
+            var allCollections = collectionsFromBox.Union(collectionsFromBaskets).ToList();
+
+            var idFromAllColections = allCollections.Select(x => x.Id).ToList();            
+
+            return sb.Append(String.Join(", ", idFromAllColections)).ToString();
         }
 
         private List<int> NotCollectedCollectionsId(List<int> id) 
         {
             List<int> ints = new List<int>();
 
-            for (int i = 1; i < 11; i++) 
+            for (int i = 1; i < 11; i++)
             {
-                if(!id.Contains(i))
+                if (!id.Contains(i))
                 {
-                    ints.Add(i); 
-                }            
+                    ints.Add(i);
+                }
             }
 
             return ints;
         }
 
-        private string NotCollectedCollectionIdToString(List<int> ints)
+        private string CollectionIdToString(List<int> ints)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < ints.Count; i++)
-            {
-                if (i != ints.Count - 1)
-                {
-                    sb.Append($"{ints[i]},");
-                }
-                else
-                {
-                    sb.Append($"{ints[i]}");
-                }
-            }
+            sb.Append(String.Join(", ", ints));
 
             return sb.ToString();
         }
 
-        private List<int> CollectedCollectionsId(List<Box> boxes)
+        private List<int> CollectedCollectionsId(List<Chest> boxes)
         {
-            List<int> list = new List<int>();
+            var result = boxes.SelectMany(x => x.Rewards.OfType<Collection>()).ToList().Select(x => x.Id).ToList().Distinct().ToList();
+            result.Sort();
 
-            for (int i = 0; i < boxes.Count; i++) 
-            {
-                for (int j = 0; j < boxes[i].Collection.Count; j++)
-                {
-                    if (!list.Contains(boxes[i].Collection[j].Id))
-                    {
-                        list.Add(boxes[i].Collection[j].Id);
-                    }
-                }
-
-                for (int j = 0; j < boxes[i].Basket.Count; j++)
-                {
-                    for (int k = 0; k < boxes[i].Basket[j].Collections.Count; k++)
-                    {
-                        if (!list.Contains(boxes[i].Basket[j].Collections[k].Id))
-                        {
-                            list.Add(boxes[i].Basket[j].Collections[k].Id);
-                        }
-                    }
-                }
-            }
-
-            list.Sort();
-
-            return list;
-        }
-        
-        private string CollectedCollectionsToString(List<int> ints)
-        {
-            StringBuilder sb = new StringBuilder();
-            
-            for (int i = 0; i < ints.Count; i++)
-            {
-                if (i != ints.Count - 1)
-                {
-                    sb.Append($"{ints[i]},");
-                }
-                else 
-                {
-                    sb.Append($"{ints[i]}");
-                }
-            }
-
-            return sb.ToString();
-        }
+            return result;
+        }        
     }
 }

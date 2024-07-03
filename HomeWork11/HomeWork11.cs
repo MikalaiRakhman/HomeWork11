@@ -1,35 +1,35 @@
-﻿namespace HomeWork11;
+﻿using HomeWork11.Exceptions;
+using HomeWork11.Exeptions;
+
+namespace HomeWork11;
 class HomeWork11
 {
-    static void Main (string[] args)
+    static void Main(string[] args)
     {
-        Server server = new Server();        
-
-        Client client = new Client();
-
-        server.BoxesCreated += () => Console.WriteLine("Server create new list of boxes");
         try
         {
-            var c = client.SortBoxes(server.CreateListOfBoxes());
+            Server server = new Server();
 
-            var str = client.ShowInformationAboutBoxes(c);
+            Client client = new Client();
 
-            Console.WriteLine(str);
+            server.ChestsCreated += client.Recive;
+
+            server.Send();
         }
 
-        catch (ArgumentNullException ex) 
+        catch (NullListOfRewardsException ex)
         {
-            Console.WriteLine("Ошибка 1: ссылка на список равна null");
+            Console.WriteLine(ex.Message);
         }
-        catch (ArgumentOutOfRangeException ex)
+        catch (EmptyListOfRewardsException ex)
         {
-            Console.WriteLine("Ошибка 2: список сундоков пуст");
+            Console.WriteLine(ex.Message);
         }
         finally
         {
             Console.WriteLine("ИГРА ОКОНЧЕНА!");
-        }        
+        }
 
-        Console.ReadLine ();
+        Console.ReadLine();
     }
 }

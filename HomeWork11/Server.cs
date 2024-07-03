@@ -1,21 +1,30 @@
-﻿namespace HomeWork11
+﻿using HomeWork11.Rewards;
+
+namespace HomeWork11
 {
     public class Server
     {
-        private Random _random = new Random();
-        public Action? BoxesCreated;
+        public Action<List<Chest>> ChestsCreated;
 
-        public List<Box> CreateListOfBoxes()
+        public void Send()
         {
-            int x = _random.Next(10);
+            if (ChestsCreated != null)
+            {
+                ChestsCreated(CreateListOfChests());
+            }
+        }
+
+        private List<Chest> CreateListOfChests()
+        {
+            Random random = new Random();
+
+            int x = random.Next(10);
 
             if (x >= 0 && x <= 2)
             {
-                List<Box> boxes = new List<Box>();
+                List<Chest> chests = new List<Chest>();
 
-                BoxesCreated?.Invoke();
-
-                int y = _random.Next(2);
+                int y = random.Next(2);
 
                 if (y == 0)
                 {
@@ -23,56 +32,110 @@
                 }
                 else
                 {
-                    return boxes;
+                    return chests;
                 }
             }
             else
             {
-                List<Box> boxes = new List<Box>();
+                List<Chest> chests = new List<Chest>();                
 
                 for (int i = 0; i < 4; i++)
                 {
-                    boxes.Add(CreateRandomBox());
-                }
+                    chests.Add(CreateRandomChest());
+                }                
 
-                BoxesCreated?.Invoke();
-
-                return boxes;
+                return chests;
             }
         }
 
-        private Box CreateRandomBox()
+        private Chest CreateRandomChest()
         {
-            Box box = new Box();
+            Chest chest = new Chest();
 
-            int[] creditsMas = {0, 10, 50,  100};
+            chest.Rewards = GenerateRewardsForChest();
 
-            box.Credits = creditsMas[_random.Next(4)];
+            return chest;
+        }
 
-            for (int i = 0; i < _random.Next(6); i++) 
+        private List<IReward> GenerateRewardsForChest() 
+        {
+            var rewards = new List<IReward>();
+
+            var credits = GenerateCreditsForChest();
+
+            var collections = GenerateCollectionsForTheChest();
+
+            var baskets = GenerateBasketsForTheChest();
+
+            rewards = rewards.Concat(credits).Concat(collections).Concat(baskets).ToList();
+
+            return rewards;
+        }
+
+        private List<IReward> GenerateCreditsForChest()
+        {
+            var rewards = new List<IReward>();
+
+            Random random = new Random();
+
+            int[] creditsMas = { 0, 10, 50, 100 };
+
+            var count = creditsMas[random.Next(creditsMas.Length)];
+
+            for (int i = 0; i < count; i++) 
             {
-                box.Collection.Add(CreateRandomCollection());
+                rewards.Add(new Credits());
             }
 
-            for (int i = 0; i < _random.Next(3); i++)
+            return rewards;
+        }
+
+        private List<IReward> GenerateCollectionsForTheChest()
+        {
+            var rewards = new List <IReward>();
+
+            Random random = new Random();
+
+            for (int i = 0; i < random.Next(6); i++)
             {
-                box.Basket.Add(CreateRandomBasket());
+                rewards.Add(CreateRandomCollection());
             }
-            
-            return box;
+
+            return rewards;
+        }
+
+        private List<IReward> GenerateBasketsForTheChest() 
+        {
+            var rewards = new List<IReward>();
+
+            Random random = new Random();
+
+            for (int i = 0; i < random.Next(3); i++)
+            {
+                rewards.Add(CreateRandomBasket());
+            }
+
+            return rewards;
         }
 
         private Basket CreateRandomBasket()
         {
+            var random = new Random();
+
             Basket basket = new Basket();
 
             int[] credits = { 10, 50 };
 
-            basket.Credits = credits[_random.Next(2)];
+            var count = credits[random.Next(credits.Length)];
 
-            for (int i = 0; i < _random.Next(1, 4); i++) 
+            for (int i = 0; i < count; i++)
             {
-                basket.Collections.Add(CreateRandomCollection());
+                basket.Rewards.Add(new Credits());
+            }
+
+            for (int i = 0; i < random.Next(1, 4); i++) 
+            {
+                basket.Rewards.Add(CreateRandomCollection());
             }
 
             return basket;
@@ -80,9 +143,11 @@
 
         private Collection CreateRandomCollection() 
         {
+            var random = new Random();
+
             Collection collection = new Collection();
 
-            collection.Id = _random.Next(1, 11);
+            collection.Id = random.Next(1, 11);
 
             return collection;
         }
